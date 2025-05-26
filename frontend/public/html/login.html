@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Chat</title>
+    <link rel="stylesheet" href="static/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div id="statusMessage" class="msg-banner" style="display: none"></div>
+
+      <h2>Login to RelayChat</h2>
+      <button id="googleLogin" class="google-button">
+        <img src="static/images/g-logo.png" alt="Google" />
+        Sign in with Google
+      </button>
+      <div class="separator">
+        <span>OR</span>
+      </div>
+      <form id="login-form">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <div class="forgot-password">
+          <a href="/forgot-password">Forgot your password?</a>
+        </div>
+        <button type="submit">Login</button>
+      </form>
+      <p class="signup-link">
+        Don't have an account? <a href="/sign-up">Create one here</a>
+      </p>
+
+      <p id="error" class="error"></p>
+    </div>
+
+    <script type="module" src="static/js/auth/login.js"></script>
+  </body>
+</html>

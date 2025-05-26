@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <link rel="stylesheet" href="static/css/lobby.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    />
+  </head>
+  <body>
+    <header id="topBar">
+      <div id="topBarLeft">
+        <button id="editUsernameBtn">Edit Username</button>
+      </div>
+      <div id="topBarCenter">
+        <span>Logged in as <strong id="username">user</strong></span>
+      </div>
+      <div id="topBarRight">
+        <label class="theme-switch">
+          <input type="checkbox" id="darkModeToggle" />
+          <span>🌙 Dark Mode</span>
+        </label>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <div id="mainLayout">
+      <div id="usernameModal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Edit Username</h3>
+          <input
+            type="text"
+            id="usernameInput"
+            placeholder="Enter new username"
+          />
+          <div class="modal-actions">
+            <button id="saveUsernameBtn">Save</button>
+            <button id="cancelUsernameBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div id="usersPanel">
+        <table id="activeUsersTable">
+          <thead>
+            <tr>
+              <th>Online</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="chatPanel">
+        <h2>Relay Hub</h2>
+        <div id="chatMessages"></div>
+        <div id="chatInput">
+          <textarea
+            id="messageInput"
+            placeholder="Type a message..."
+            rows="1"
+          ></textarea>
+          <div id="charCount">0 / 500</div>
+          <button id="sendBtn">Send</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="static/js/lobby/app.js"></script>
+  </body>
+</html>

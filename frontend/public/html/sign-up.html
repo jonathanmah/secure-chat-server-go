@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Account - ChatApp</title>
+    <link rel="stylesheet" href="static/css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Create Your ChatApp Account</h2>
+      <form id="sign-up-form">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Confirm Password"
+          required
+        />
+        <button type="submit">Create Account</button>
+      </form>
+      <p class="signup-link">
+        Already have an account? <a href="/">Login here</a>
+      </p>
+      <p id="error" class="error"></p>
+    </div>
+    <script type="module" src="static/js/auth/sign-up.js"></script>
+  </body>
+</html>
