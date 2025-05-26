@@ -1,0 +1,4 @@
+.env
+.DS_store
+frontend/.DS_store
+frontend/node_modules
