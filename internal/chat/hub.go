@@ -2,17 +2,18 @@ package chat
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 )
 
 // maintains active peer connections as clients and broadcasts messages
 type Hub struct {
-	// hashset of pointers to clients
-	clients map[*Client]struct{}
+	// hashmap of Key:RoomID, Value: hashset of pointers to clients
+	rooms map[string]map[*Client]struct{}
 
-	// inbound messages from peers, unbuffered to apply backpressure
+	// inbound messages from peers, unbuffered for backpressure
 	// don't want a single client taking up a buffered channel with spam messages
-	broadcast chan []byte
+	broadcast chan ChatMessage
 
 	usernameUpdate chan UsernameUpdateData // used to update client name for broadcasting new user list
 
@@ -23,78 +24,128 @@ type Hub struct {
 	unregister chan *Client
 }
 
+type ChatMessage struct {
+	RoomID         string // room ID to broadcast message
+	Data           []byte // encoded WebSocket data including payload
+	SenderUsername string // using for logging
+	MessageText    string // using for logging
+}
+
 // create and return pointer to new Hub
 func NewHub() *Hub {
 	return &Hub{
-		clients:        make(map[*Client]struct{}),
-		broadcast:      make(chan []byte),
+		rooms:          make(map[string]map[*Client]struct{}),
+		broadcast:      make(chan ChatMessage),
 		usernameUpdate: make(chan UsernameUpdateData),
 		register:       make(chan *Client),
 		unregister:     make(chan *Client),
 	}
 }
 
-func (h *Hub) RegisterClient(client *Client) {
-	h.register <- client
+func (h *Hub) RegisterClient(c *Client) {
+	h.register <- c
+}
+
+func (h *Hub) UnregisterClient(c *Client) {
+	h.unregister <- c
 }
 
 // manage clients and broadcasting messages
 func (h *Hub) Run() {
-	//log.Printf("hub addr in Run(): %p", h)
 	for {
 		select {
-		// read in and add clients pending registration
 		case client := <-h.register:
-			h.clients[client] = struct{}{}
-			h.broadcastActiveUserList()
-		case client := <-h.unregister: // read in and remove clients pending unregistration
-			close(client.send)
-			delete(h.clients, client)
-			h.broadcastActiveUserList()
-		case message := <-h.broadcast: // read in a message from broadcast channel
-			//#TODO save in postgres
-			h.broadcastData(message)
-		case clientUpdate := <-h.usernameUpdate:
-			clientUpdate.Client.username = clientUpdate.Username
-			h.broadcastActiveUserList()
+			h.handleRegisterClient(client)
+		case client := <-h.unregister:
+			h.handleUnregisterClient(client)
+		case chatMessage := <-h.broadcast:
+			h.handleBroadcastChatMessage(chatMessage)
+		case usernameUpdate := <-h.usernameUpdate:
+			h.handleUsernameUpdate(usernameUpdate)
 		}
 	}
 }
 
-// sends updated list of active usernames to all peers
-// executes whenever a new client connects, disconnects, or changes name
-func (h *Hub) broadcastActiveUserList() {
-	var users []UserItem
-	for client := range h.clients {
-		users = append(users, UserItem{ID: client.id, Username: client.username})
+// creates a client for a newly connected peer and registers to a room
+func (h *Hub) handleRegisterClient(c *Client) {
+	if h.rooms[c.RoomID] == nil { // if room doesn't exist yet create a new one
+		h.rooms[c.RoomID] = make(map[*Client]struct{})
 	}
-	userListMessage := UserListMessage{Users: users}
-	payload, err := json.Marshal(userListMessage)
-	if err != nil {
-		log.Println("Error marshaling user list payload:", err)
+	h.rooms[c.RoomID][c] = struct{}{}
+	h.broadcastActiveUserList(c.RoomID)
+
+	msg := fmt.Sprintf("%s has joined Room %s ", c.Username, c.RoomID)
+	go dispatchNotification(h, c.RoomID, msg)
+
+	log.Printf("%s has joined Room %s ", c.Username, c.RoomID) // #TODO dispatch joined room message custom
+}
+
+// removes a client from their current room
+func (h *Hub) handleUnregisterClient(c *Client) {
+	close(c.Send)
+	delete(h.rooms[c.RoomID], c) // remove client from room
+
+	msg := fmt.Sprintf("%s has left Room %s ", c.Username, c.RoomID)
+	go dispatchNotification(h, c.RoomID, msg)
+
+	if len(h.rooms[c.RoomID]) == 0 { // delete room if it's empty
+		delete(h.rooms, c.RoomID)
+		log.Printf("Deleted empty Room %s.", c.RoomID)
+	} else {
+		h.broadcastActiveUserList(c.RoomID) // broadcast to the room current active users
+	}
+}
+
+// handler for broadcasting chat messages
+func (h *Hub) handleBroadcastChatMessage(message ChatMessage) {
+	log.Printf("(Room %s) %s: %s", message.RoomID, message.SenderUsername, message.MessageText)
+	h.broadcastData(message.RoomID, message.Data)
+}
+
+func (h *Hub) handleUsernameUpdate(update UsernameUpdateData) {
+	update.Client.Username = update.Username
+	h.broadcastActiveUserList(update.Client.RoomID)
+}
+
+// sends updated list of active users in a room
+// executes whenever a new client connects, disconnects, or changes name
+func (h *Hub) broadcastActiveUserList(RoomID string) {
+	room := h.rooms[RoomID]
+	if room == nil {
+		log.Println("Tried to broadcast to empty room")
 		return
 	}
-	message := WebSocketMessage{
-		Type:    "userlist",
-		Payload: payload, // json.RawMessage type allows using already-marshaled payload
+	var users []UserItem
+	for client := range room {
+		users = append(users, UserItem{ID: client.ID, Username: client.Username})
 	}
-	data, err := json.Marshal(message)
+	payload, err := json.Marshal(UserListMessage{Users: users})
 	if err != nil {
-		log.Println("Error marshaling WebSocketMessage:", err)
+		log.Println(err)
+		return
+	}
+	data, err := json.Marshal(WebSocketMessage{Type: "userlist", Payload: payload})
+	if err != nil {
+		log.Println(err)
 		return
 	}
 	// broadcast active user list to all clients
-	h.broadcastData(data)
+	h.broadcastData(RoomID, data)
 }
 
-// broadcast data to all active websocket connections
-func (h *Hub) broadcastData(data []byte) {
-	for client := range h.clients { // push data to all clients send buffered channels
+// broadcasts an encoded WebSocketMessage to all clients in the room
+func (h *Hub) broadcastData(RoomID string, data []byte) {
+	room := h.rooms[RoomID]
+	if room == nil {
+		log.Println("Tried to broadcast to empty room")
+		return
+	}
+	for client := range room { // push data to all clients send buffered channels
 		select {
-		case client.send <- data:
+		case client.Send <- data:
 		default: // default disconnect if client send buffered channel full and being slow
-			close(client.send)
-			delete(h.clients, client)
+			close(client.Send)
+			delete(room, client)
 		}
 	}
 }

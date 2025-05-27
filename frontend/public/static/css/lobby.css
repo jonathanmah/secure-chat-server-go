@@ -10,7 +10,7 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   display: flex;
@@ -127,12 +127,12 @@ button:hover {
   background: var(--panel-color);
   border-radius: 10px;
   margin-bottom: 5px;
-  
+
   /* Critical fixes for long unbroken text */
-  word-wrap: break-word;       /* Older browsers */
-  overflow-wrap: break-word;   /* Modern spec */
-  word-break: break-word;      /* Force breaks in long strings */
-  white-space: pre-wrap;       /* Preserve newlines and allow wrap */
+  word-wrap: break-word; /* Older browsers */
+  overflow-wrap: break-word; /* Modern spec */
+  word-break: break-word; /* Force breaks in long strings */
+  white-space: pre-wrap; /* Preserve newlines and allow wrap */
 }
 
 .chat-message .timestamp {
@@ -179,7 +179,7 @@ button:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -195,7 +195,7 @@ button:hover {
   padding: 20px;
   border-radius: 8px;
   width: 300px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.35);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
   text-align: center;
 }
 
@@ -264,7 +264,7 @@ body.dark-mode button {
   margin-top: 0;
   margin-bottom: 10px;
   color: var(--accent-color);
-  padding-left: 10px; 
+  padding-left: 10px;
 }
 
 #charCount {
@@ -272,4 +272,29 @@ body.dark-mode button {
   color: #888;
   margin-top: 2px;
   text-align: right;
+}
+.chat-notification {
+  color: #666;
+  font-style: italic;
+  background-color: var(--panel-color);
+  padding: 4px 8px;
+  margin: 4px 0;
+  border-radius: 4px;
+  text-align: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.chat-notification .timestamp {
+  display: inline-block;
+  font-size: 0.65em;
+  color: var(--secondary-text);
+  margin-left: 6px;
+}
+
+body.dark-mode .chat-notification {
+  color: var(--secondary-text);
+  background-color: var(--panel-color);
 }

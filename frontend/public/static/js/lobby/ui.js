@@ -1,22 +1,33 @@
-import { messageInput, usernameDisplay, darkModeToggle } from "./dom.js";
+import {
+  roomHeader,
+  chatMessages,
+  messageInput,
+  usernameDisplay,
+  darkModeToggle,
+} from "./dom.js";
 
 // -------------------------------------- CHAT MESSAGE DISPLAY ----------------------------------
+export function renderRoomHeader(roomID) {
+  if (roomHeader) {
+    roomHeader.textContent = `Hub - Room ${roomID}`;
+  }
+}
+
 // render the chat messages
 export function renderChatMessage(payload) {
-  const chatMessages = document.getElementById("chatMessages");
   const messageDiv = createChatMessage(payload);
   chatMessages.append(messageDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight; // scroll to bottom
 }
 
+// clear previous messages
+export function clearChatMessages() {
+  chatMessages.textContent = "";
+}
+
 // creates HTML element for chat message
 function createChatMessage(payload) {
   const messageDiv = document.createElement("div");
-  messageDiv.classList.add("chat-message");
-  const usernameStrong = document.createElement("strong");
-  usernameStrong.style.color = getUserColour(payload.sender_username);
-  usernameStrong.textContent = payload.sender_username;
-  const textNode = document.createTextNode(`: ${payload.text} `);
   const timestampSpan = document.createElement("span");
   timestampSpan.classList.add("timestamp");
   const date = new Date(payload.time);
@@ -25,7 +36,19 @@ function createChatMessage(payload) {
     minute: "2-digit",
   });
   timestampSpan.textContent = time;
-  messageDiv.append(usernameStrong, textNode, timestampSpan);
+
+  if (payload.sender_id === "notification") {
+    messageDiv.classList.add("chat-notification");
+    messageDiv.textContent = payload.text;
+    messageDiv.appendChild(timestampSpan);
+  } else {
+    messageDiv.classList.add("chat-message");
+    const usernameStrong = document.createElement("strong");
+    usernameStrong.style.color = getUserColour(payload.sender_username);
+    usernameStrong.textContent = payload.sender_username;
+    const textNode = document.createTextNode(`: ${payload.text} `);
+    messageDiv.append(usernameStrong, textNode, timestampSpan);
+  }
   return messageDiv;
 }
 

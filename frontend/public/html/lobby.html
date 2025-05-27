@@ -14,6 +14,7 @@
     <header id="topBar">
       <div id="topBarLeft">
         <button id="editUsernameBtn">Edit Username</button>
+        <button id="joinRoomBtn">Join a Room</button>
       </div>
       <div id="topBarCenter">
         <span>Logged in as <strong id="username">user</strong></span>
@@ -42,6 +43,16 @@
           </div>
         </div>
       </div>
+      <div id="joinRoomModal" class="modal hidden">
+        <div class="modal-content">
+          <h3>Select a Room</h3>
+          <input type="text" id="roomInput" placeholder="Enter room ID" />
+          <div class="modal-actions">
+            <button id="confirmJoinRoomBtn">Join</button>
+            <button id="cancelJoinRoomBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
       <div id="usersPanel">
         <table id="activeUsersTable">
           <thead>
@@ -53,7 +64,7 @@
         </table>
       </div>
       <div id="chatPanel">
-        <h2>Relay Hub</h2>
+        <h2 id="roomHeader">Hub</h2>
         <div id="chatMessages"></div>
         <div id="chatInput">
           <textarea

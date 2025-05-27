@@ -2,20 +2,31 @@ import { updateUsername, logout } from "../api.js";
 import {
   messageInput,
   sendBtn,
+  logoutBtn,
   editUsernameBtn,
   usernameInput,
   usernameModal,
   cancelUsernameBtn,
   saveUsernameBtn,
   darkModeToggle,
+  joinRoomBtn,
+  roomInput,
+  confirmJoinRoomBtn,
+  cancelJoinRoomBtn,
+  joinRoomModal,
 } from "./dom.js";
 import {
   renderCharCount,
   resizeTextarea,
   renderUsername,
   loadDarkModePref,
+  clearChatMessages,
 } from "./ui.js";
-import { sendChatMessage, sendUsernameUpdateMessage } from "./websocket.js";
+import {
+  initWebSocketConn,
+  sendChatMessage,
+  sendUsernameUpdateMessage,
+} from "./websocket.js";
 
 // -------------------------------------- SEND MESSAGE ----------------------------------
 // send chat messages with enter
@@ -23,7 +34,7 @@ messageInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     const text = messageInput.value.trim();
-    if (text != null) {
+    if (text) {
       sendChatMessage(text);
       messageInput.value = "";
       renderCharCount();
@@ -89,8 +100,27 @@ usernameInput.addEventListener("keydown", function (event) {
   }
 });
 
+// -------------------------------------- JOIN ROOM MODAL ----------------------------------
+joinRoomBtn.addEventListener("click", () => {
+  joinRoomModal.classList.remove("hidden");
+});
+
+cancelJoinRoomBtn.addEventListener("click", () => {
+  joinRoomModal.classList.add("hidden");
+  roomInput.value = "";
+});
+
+confirmJoinRoomBtn.addEventListener("click", () => {
+  const newRoomID = roomInput.value.trim();
+  if (newRoomID) {
+    initWebSocketConn(newRoomID);
+    clearChatMessages();
+  }
+  joinRoomModal.classList.add("hidden");
+  roomInput.value = "";
+});
 // -------------------------------------- LOGOUT ----------------------------------
-document.getElementById("logoutBtn").addEventListener("click", async () => {
+logoutBtn.addEventListener("click", async () => {
   try {
     await logout();
   } catch (err) {

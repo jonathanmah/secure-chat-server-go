@@ -24,16 +24,23 @@ func ServeWsConn(hub *chat.Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return // would've already wrote error to response, just return
 	}
+	roomID := r.URL.Query().Get("room_id")
+	if roomID == "" {
+		http.Error(w, "Missing room_id", http.StatusBadRequest)
+		return
+	}
+
 	// upgrade connection from HTTP to WebSocket protocol
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("WebSocket upgrade failed:", err)
 		return
 	}
+	log.Printf("Opened a new connection with %s in Room %s", username, roomID)
+
 	// create new client for the connection
-	client := chat.NewClient(id, username, hub, conn)
-	hub.RegisterClient(client) // push onto hub register channel
-	log.Printf("New peer connecting from address: %s", r.RemoteAddr)
+	client := chat.NewClient(id, username, roomID, hub, conn)
+	hub.RegisterClient(client)   // push onto hub register channel
 	go client.ReceiveWsMessage() // receive websocket frames on separate thread
 	go client.SendWsMessage()    // send websocket frames on separate thread
 }

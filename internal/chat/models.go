@@ -32,6 +32,7 @@ type ChatMessageData struct { // omitempty will leave field out of json, otherwi
 	SenderUsername   string    `json:"sender_username,omitempty"`
 	ReceiverID       string    `json:"receiver_id,omitempty"`
 	ReceiverUsername string    `json:"receiver_username,omitempty"`
+	RoomID           string    `json:"room_id,omitempty"`
 	Text             string    `json:"text"`
 	Time             time.Time `json:"time,omitempty"`
 }

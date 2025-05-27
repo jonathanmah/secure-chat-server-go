@@ -10,7 +10,7 @@ async function init() {
     window.username = data.username;
     window.users = [];
     renderUsername(data.username);
-    initWebSocketConn();
+    initWebSocketConn("1");
   } catch (err) {
     console.error(err);
   }

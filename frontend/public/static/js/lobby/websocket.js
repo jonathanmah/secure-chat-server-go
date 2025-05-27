@@ -1,5 +1,9 @@
 import { HUB_BASE_URL } from "../config.js";
-import { renderChatMessage, renderActiveUsers } from "./ui.js";
+import {
+  renderRoomHeader,
+  renderChatMessage,
+  renderActiveUsers,
+} from "./ui.js";
 
 let socket = null;
 
@@ -10,9 +14,17 @@ const MessageType = {
 };
 
 // initializes connection with server hub
-export function initWebSocketConn() {
-  socket = new WebSocket(`${HUB_BASE_URL}/ws`);
+export function initWebSocketConn(roomID) {
+  if (
+    socket &&
+    (socket.readyState === WebSocket.OPEN ||
+      socket.readyState === WebSocket.CONNECTING)
+  ) {
+    socket.close(1000); // 1000 for normal close
+  }
 
+  socket = new WebSocket(`${HUB_BASE_URL}/ws?room_id=${roomID}`);
+  renderRoomHeader(roomID);
   // upgrader.Upgrade() in Go server will trigger this, once updating protocol from HTTP1.1 to WebSocket
   socket.addEventListener("open", () => {
     console.log("WebSocket connected");
@@ -49,6 +61,7 @@ export function sendChatMessage(text) {
     },
   });
   sendMessage(message);
+  console.log("Message sent");
 }
 export function sendUsernameUpdateMessage(username) {
   let message = JSON.stringify({

@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"encoding/json"
 	"log"
 	"time"
 )
@@ -9,47 +8,68 @@ import (
 // read a websocket message, and dispatch to appropriate channel on hub
 // only does the parsing and routing, hub will save to postgres
 func dispatch(c *Client, data []byte) {
-	var wsMessage WebSocketMessage
-	if err := json.Unmarshal(data, &wsMessage); err != nil {
-		log.Println("Error unmarshaling websocket message data: ", err)
+	wsMessage, err := Decode[WebSocketMessage](data)
+	if err != nil {
+		log.Println(err)
 		return
 	}
 	switch wsMessage.Type {
 	case Chat:
-		var chatMessageData ChatMessageData
-		chatMessageData.SenderID = c.id
-		chatMessageData.SenderUsername = c.username
-		chatMessageData.Time = time.Now()
-		if err := json.Unmarshal(wsMessage.Payload, &chatMessageData); err != nil {
-			log.Println("Error unmarshaling chat message payload: ", err)
-			return
-		}
-		payload, err := json.Marshal(chatMessageData)
+		chatMessageData, err := Decode[ChatMessageData](wsMessage.Payload)
 		if err != nil {
-			log.Println("Error marshaling chat message payload: ", err)
+			log.Println(err)
 			return
 		}
-		outboundWsMessage := WebSocketMessage{
-			Type:    Chat,
-			Payload: payload,
-		}
-		data, err := json.Marshal(outboundWsMessage)
-		if err != nil {
-			log.Println("Error marshaling chat message data: ", err)
-			return
-		}
-		c.hub.broadcast <- data
+		updateChatMessageData(chatMessageData, c)
+		dispatchChatMessage(c.Hub, *chatMessageData)
 
 	case UsernameUpdate:
-		var usernameUpdateData UsernameUpdateData
-		usernameUpdateData.Client = c
-		if err := json.Unmarshal(wsMessage.Payload, &usernameUpdateData); err != nil {
-			log.Println("Error unmarshaling to UsernameUpdateData")
+		usernameUpdateData, err := Decode[UsernameUpdateData](wsMessage.Payload)
+		if err != nil {
+			log.Println(err)
 			return
 		}
-		//log.Printf("hub addr in Dispatcher: %p", c.hub)
-		c.hub.usernameUpdate <- usernameUpdateData
+		usernameUpdateData.Client = c
+		c.Hub.usernameUpdate <- *usernameUpdateData
 	default:
 		log.Println("Unsupported WebSocket message type")
 	}
+}
+
+func updateChatMessageData(chatMessageData *ChatMessageData, c *Client) {
+	chatMessageData.SenderID = c.ID
+	chatMessageData.SenderUsername = c.Username
+	chatMessageData.Time = time.Now()
+	chatMessageData.RoomID = c.RoomID
+}
+
+// enqueues a message received from a listening websocket connection to hub broadcast channel
+func dispatchChatMessage(hub *Hub, chatMessageData ChatMessageData) {
+	data, err := Encode(chatMessageData)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	outboundWsMessage := WebSocketMessage{
+		Type:    Chat,
+		Payload: data,
+	}
+	data, err = Encode(outboundWsMessage)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	hub.broadcast <- ChatMessage{chatMessageData.RoomID, data, chatMessageData.SenderUsername, chatMessageData.Text}
+}
+
+// notifications to a room if new client joins or leaves the room
+func dispatchNotification(hub *Hub, roomID string, text string) {
+	chatMessageData := ChatMessageData{
+		SenderUsername: "Hub",
+		SenderID:       "notification",
+		RoomID:         roomID,
+		Text:           text,
+		Time:           time.Now(),
+	}
+	dispatchChatMessage(hub, chatMessageData)
 }
