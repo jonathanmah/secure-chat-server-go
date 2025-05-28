@@ -6,6 +6,7 @@ import (
 	"chatapp/internal/postgres"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -47,19 +48,48 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Incorrect password", http.StatusUnauthorized)
 		return
 	}
-	// create JWT
-	sessionToken, err := auth.CreateSessionToken(id)
-	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+	if err := auth.SetNewSessionCookies(id, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// Set token in HTTP-only cookie
-	http.SetCookie(w, config.NewSessionCookie(sessionToken))
 	w.WriteHeader(http.StatusOK)
 }
 
 // set JWT on cookie to be expired/invalid after a logout
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, config.NewExpiredSessionCookie())
+	id, err := auth.GetClaimFromAccessCookie("id", r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	err = auth.DeleteRefreshToken(id)
+	if err != nil {
+		http.Error(w, "Failed to delete refresh token on logout", http.StatusInternalServerError)
+		return
+	}
+	auth.ExpireSessionCookies(w)
+	w.WriteHeader(http.StatusOK)
+}
+
+// creates new access and refresh token when access token expires
+func RefreshAccessTokenHandler(w http.ResponseWriter, r *http.Request) {
+	currRefreshToken, err := auth.GetTokenFromCookie(config.RefreshCookieName, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	id, expiresAt, err := postgres.GetRefreshTokenInfo(currRefreshToken)
+	if err != nil {
+		http.Error(w, "Invalid refresh token", http.StatusUnauthorized)
+	}
+	if time.Now().After(expiresAt) {
+		postgres.DeleteRefreshToken(id) // if its already expired just delete it
+		http.Error(w, "Refresh token has expired", http.StatusUnauthorized)
+		return
+	}
+	if err := auth.SetNewSessionCookies(id, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }

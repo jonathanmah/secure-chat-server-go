@@ -5,22 +5,24 @@ import (
 	"net/http"
 )
 
-// authenticate short term session token on cookies
-func AuthenticateSession(next http.Handler) http.Handler {
-	return Authenticate(next, true)
+// authenticate short term access token on cookie
+func AuthenticateAccessToken(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := auth.ParseAccessCookie(r)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // authenticate longer term tokens in query params for activation email or password resets
-func AuthenticateParamToken(next http.Handler) http.Handler {
-	return Authenticate(next, false)
-}
-
-// authenticate JWTs on requests
-func Authenticate(next http.Handler, isSession bool) http.Handler {
+func AuthenticateQueryParamToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := auth.VerifyToken(r, isSession)
+		_, err := auth.ParseQueryParams(r)
 		if err != nil {
-			http.Redirect(w, r, "/", http.StatusFound)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)

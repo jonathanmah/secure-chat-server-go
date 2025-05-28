@@ -117,12 +117,11 @@ func sendConfirmation(email string) error {
 
 // verify token in query params from email and activate a new user
 func ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
-	claims, err := auth.VerifyQueryParamToken(r)
+	email, err := auth.GetClaimFromQueryParams("email", r)
 	if err != nil {
-		http.Error(w, "Failed to activate user", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
-	email := claims["email"].(string)
 	err = postgres.ActivateUser(email)
 	if err != nil {
 		http.Error(w, "Failed to confirm user", http.StatusInternalServerError)

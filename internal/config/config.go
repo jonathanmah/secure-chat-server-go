@@ -10,6 +10,14 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+type Config struct {
+	Port    string
+	BaseURL string
+	PG      *PGConfig
+	Email   *EmailConfig
+	Auth    *AuthConfig
+}
+
 type PGConfig struct {
 	User       string
 	Password   string
@@ -22,60 +30,58 @@ type PGConfig struct {
 
 type EmailConfig struct {
 	FromAddress      string
-	SMTPPass         string
+	SMTPPassword     string
+	SMTPHost         string
+	SMTPPort         string
 	ResetPasswordURL string
 	ConfirmEmailURL  string
 }
 
 type AuthConfig struct {
-	SessionKey           []byte
-	ActivationKey        []byte
+	AccessTokenKey       []byte
+	ActivationTokenKey   []byte
 	OAuthClientID        string
 	OAuthClientSecret    string
-	BaseURL              string
 	OAuthUserInfoURL     string
 	PostOAuthRedirectURL string
 	OAuthConfig          oauth2.Config
 }
 
-type Config struct {
-	PG    *PGConfig
-	Email *EmailConfig
-	Auth  *AuthConfig
-}
-
 var App *Config
 
 func Load() {
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	baseURL := getEnv("SERVER_BASE_URL")
+	baseURL := getEnv("BASE_URL")
 
 	App = &Config{
+		Port:    getEnv("PORT"),
+		BaseURL: baseURL,
+
 		PG: &PGConfig{
 			User:       getEnv("PG_USER"),
 			Password:   getEnv("PG_PASSWORD"),
 			Host:       getEnv("PG_HOST"),
 			Port:       getEnv("PG_PORT"),
-			DBName:     getEnv("PG_NAME"),
+			DBName:     getEnv("PG_DBNAME"),
 			SSLMode:    getEnv("PG_SSL_MODE"),
 			DriverName: getEnv("PG_DRIVER_NAME"),
 		},
 		Email: &EmailConfig{
-			FromAddress:      getEnv("EMAIL_ADDRESS"),
-			SMTPPass:         getEnv("SMTP_PASSWORD"),
+			FromAddress:      getEnv("SMTP_FROM"),
+			SMTPPassword:     getEnv("SMTP_PASSWORD"),
+			SMTPHost:         getEnv("SMTP_HOST"),
+			SMTPPort:         getEnv("SMTP_PORT"),
 			ResetPasswordURL: baseURL + "/reset-password",
 			ConfirmEmailURL:  baseURL + "/auth/confirm",
 		},
 		Auth: &AuthConfig{
-			SessionKey:           []byte(getEnv("SESSION_KEY_SECRET")),
-			ActivationKey:        []byte(getEnv("ACTIVATION_KEY_SECRET")),
+			AccessTokenKey:       []byte(getEnv("ACCESS_TOKEN_SECRET")),
+			ActivationTokenKey:   []byte(getEnv("ACTIVATION_TOKEN_SECRET")),
 			OAuthClientID:        getEnv("OAUTH_CLIENT_ID"),
 			OAuthClientSecret:    getEnv("OAUTH_CLIENT_SECRET"),
-			BaseURL:              baseURL,
 			OAuthUserInfoURL:     getEnv("OAUTH_USER_INFO_URL"),
 			PostOAuthRedirectURL: baseURL + "/lobby",
 			OAuthConfig: oauth2.Config{

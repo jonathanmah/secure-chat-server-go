@@ -1,9 +1,33 @@
 import { SERVER_BASE_URL } from "./config.js";
 
+export async function fetchWithAuth(endpoint, init) {
+  const res = await fetch(endpoint, init);
+  if (res.status !== 401) {
+    return res;
+  }
+  console.log("Access token failed. Trying to get a new one...");
+  // if access token expired with 401 error, call refresh with refresh token
+  const refreshRes = await fetch(`${SERVER_BASE_URL}/auth/refresh`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (refreshRes.ok) {
+    console.log(
+      "Successfully called refresh endpoint. should make request now."
+    );
+    // try the original request again after refreshing access token
+    return fetch(endpoint, init);
+  } else {
+    window.location.href = "/login"; // if failed to make request to refresh access token, then redirect to login
+    throw new Error("Session expired. Redirecting to login.");
+  }
+}
+
 // GET JSON - the current authenticated users id and username
 export async function getUserInfo() {
-  const res = await fetch(`${SERVER_BASE_URL}/auth/user-info`, {
-    credentials: "include", // include cookies
+  const res = await fetchWithAuth(`${SERVER_BASE_URL}/auth/user-info`, {
+    credentials: "include",
   });
   if (!res.ok) {
     const errorText = await res.text();
@@ -17,7 +41,7 @@ export async function getUserInfo() {
 
 // POST username - update the current users username in db
 export async function updateUsername(newUsername) {
-  const res = await fetch(`${SERVER_BASE_URL}/auth/update-username`, {
+  const res = await fetchWithAuth(`${SERVER_BASE_URL}/auth/update-username`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -117,7 +141,6 @@ export async function createNewAccount(email, password) {
       password: password,
     }),
   });
-  console.log("AFTER FETCH");
   if (!res.ok) {
     const errorText = await res.text();
     throw new Error(

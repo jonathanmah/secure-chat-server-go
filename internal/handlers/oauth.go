@@ -5,8 +5,6 @@ import (
 	"chatapp/internal/config"
 	"chatapp/internal/postgres"
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -17,20 +15,15 @@ import (
 // start authorization code flow
 func RedirectOAuthHandler(w http.ResponseWriter, r *http.Request) {
 	// generate random string
-	state := generateRandomString()
-	// add oauth random state on cookie
+	state, err := auth.GenerateRandomString()
+	if err != nil {
+		http.Error(w, "Failed to create state value", http.StatusInternalServerError)
+		return
+	}
+	// add state on cookie to compare with OAuth redirect state to ensure the redirect code is from the same user who issued for it
 	http.SetCookie(w, config.NewOAuthStateCookie(state))
 	url := config.App.Auth.OAuthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("prompt", "select_account"))
 	http.Redirect(w, r, url, http.StatusFound)
-}
-
-// create a random string for oauth state
-func generateRandomString() string {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		panic(err) // if this fails its doomed
-	}
-	return base64.URLEncoding.EncodeToString(b)
 }
 
 func PostOAuthRedirectHandler(w http.ResponseWriter, r *http.Request) {
@@ -62,17 +55,14 @@ func PostOAuthRedirectHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// create jwt session token with user id
-	sessionToken, err := auth.CreateSessionToken(id)
-	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+	if err := auth.SetNewSessionCookies(id, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.SetCookie(w, config.NewSessionCookie(sessionToken))
 	http.Redirect(w, r, config.App.Auth.PostOAuthRedirectURL, http.StatusFound)
 }
 
-// get ID from existing account or create OAuth account without password and return ID
+// get id or create OAuth account without password and return id
 func getID(email string) (string, error) {
 	// check if account already been created with email
 	emailExists, err := postgres.EmailExists(email)
@@ -103,9 +93,9 @@ func getID(email string) (string, error) {
 
 // confirm oauth state is same after redirect
 func validateOAuthState(w http.ResponseWriter, r *http.Request) bool {
-	state := r.URL.Query().Get("state")
-	cookie, err := r.Cookie("oauth_state")
-	if err != nil || cookie.Value != state {
+	queryParamState := r.URL.Query().Get("state")
+	cookieState, err := auth.GetTokenFromCookie(config.OAuthStateCookieName, r)
+	if err != nil || cookieState != queryParamState {
 		http.Error(w, "Invalid state", http.StatusBadRequest)
 		return false
 	}
@@ -118,7 +108,7 @@ func exchangeCodeForToken(code string) (*oauth2.Token, error) {
 }
 
 type OAuthUserInfo struct {
-	Sub   string `json:"sub"` // short for subject, whoever claim is for
+	Sub   string `json:"sub"`
 	Email string `json:"email"`
 	Name  string `json:"name"`
 }

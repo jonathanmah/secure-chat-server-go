@@ -4,6 +4,7 @@ import (
 	"chatapp/internal/config"
 	"chatapp/internal/postgres"
 	"chatapp/internal/router"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -14,6 +15,6 @@ func main() {
 	postgres.Init()
 	router := router.NewRouter()
 
-	log.Println("Listening on port 8080...")
-	http.ListenAndServe(":8080", router)
+	log.Printf("Listening on port %v...", config.App.Port)
+	http.ListenAndServe(fmt.Sprintf(":%v", config.App.Port), router)
 }

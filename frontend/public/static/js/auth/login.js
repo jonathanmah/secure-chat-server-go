@@ -24,7 +24,7 @@ document
 
 document.getElementById("googleLogin").addEventListener("click", function () {
   // Redirect the user to go server OAuth handler
-  window.location.href = `${SERVER_BASE_URL}/login/google`; //#TODO update localhost
+  window.location.href = `${SERVER_BASE_URL}/login/google`;
 });
 
 // shows success status and cleans up URL

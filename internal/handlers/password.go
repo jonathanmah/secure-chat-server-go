@@ -62,12 +62,11 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.FormValue("token")
 	newPassword := r.FormValue("password")
 
-	claims, err := auth.VerifyTokenString(token, auth.KeyFuncActivation)
+	email, err := auth.GetClaimFromActivationToken("email", token)
 	if err != nil {
-		http.Error(w, "Failed to extract claims from token", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	email := claims["email"].(string)
 	hashedPassword, err := GetHashedPassword(newPassword)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

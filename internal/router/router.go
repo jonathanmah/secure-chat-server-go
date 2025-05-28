@@ -35,8 +35,10 @@ func registerAuthRoutes(r chi.Router) {
 		r.Post("/auth/reset-password", handlers.ResetPasswordHandler)
 	})
 
-	r.With(middleware.AuthenticateSession).Get("/auth/user-info", handlers.GetUserInfoHandler)
-	r.With(middleware.AuthenticateSession).Post("/auth/update-username", handlers.UpdateUsernameHandler)
+	r.Post("/auth/refresh", handlers.RefreshAccessTokenHandler)
+
+	r.With(middleware.AuthenticateAccessToken).Get("/auth/user-info", handlers.GetUserInfoHandler)
+	r.With(middleware.AuthenticateAccessToken).Post("/auth/update-username", handlers.UpdateUsernameHandler)
 }
 
 // register websocket routes for chat messages
@@ -66,6 +68,6 @@ func registerHTMLRoutes(r chi.Router) {
 		sub.Get("/forgot-password", serveFile(publicDir, "forgot-password.html"))
 	})
 
-	r.With(middleware.AuthenticateSession, middleware.NoCache).Get("/lobby", serveFile(publicDir, "lobby.html"))
-	r.With(middleware.AuthenticateParamToken, middleware.NoCache).Get("/reset-password", serveFile(publicDir, "reset-password.html"))
+	r.With(middleware.NoCache).Get("/lobby", serveFile(publicDir, "lobby.html"))
+	r.With(middleware.AuthenticateQueryParamToken, middleware.NoCache).Get("/reset-password", serveFile(publicDir, "reset-password.html"))
 }

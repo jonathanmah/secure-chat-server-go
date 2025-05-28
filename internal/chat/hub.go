@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 )
@@ -77,7 +76,7 @@ func (h *Hub) handleRegisterClient(c *Client) {
 	msg := fmt.Sprintf("%s has joined Room %s ", c.Username, c.RoomID)
 	go dispatchNotification(h, c.RoomID, msg)
 
-	log.Printf("%s has joined Room %s ", c.Username, c.RoomID) // #TODO dispatch joined room message custom
+	log.Printf("%s has joined Room %s ", c.Username, c.RoomID)
 }
 
 // removes a client from their current room
@@ -119,12 +118,13 @@ func (h *Hub) broadcastActiveUserList(RoomID string) {
 	for client := range room {
 		users = append(users, UserItem{ID: client.ID, Username: client.Username})
 	}
-	payload, err := json.Marshal(UserListMessage{Users: users})
+
+	payload, err := Encode(UserListMessage{Users: users})
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	data, err := json.Marshal(WebSocketMessage{Type: "userlist", Payload: payload})
+	data, err := Encode(WebSocketMessage{Type: UserList, Payload: payload})
 	if err != nil {
 		log.Println(err)
 		return

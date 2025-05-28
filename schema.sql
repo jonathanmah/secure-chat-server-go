@@ -1,15 +1,3 @@
-
-CREATE DATABASE {DBNAME};
-CREATE USER {USER} WITH PASSWORD '{PASSWORD_HERE}';
-GRANT CONNECT ON DATABASE {DBNAME} TO {USER};
-
-GRANT USAGE ON SCHEMA public TO {USER};
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {USER};
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {USER};
-
-
 -- Need pgcrypto plugin for creating UUIDs
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -23,6 +11,15 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table for storing refresh tokens for session management
+CREATE TABLE refresh_tokens (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table for saving messages
 CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sender_id UUID NOT NULL,

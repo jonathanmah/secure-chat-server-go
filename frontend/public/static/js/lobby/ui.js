@@ -105,9 +105,7 @@ const colours = [
   "#d1a3a3", // light pink
   "#006666", // teal
   "#cda7e6", // lavender
-  "#80531f", // brown
   "#d9d3ac", // light lellow
-  "#660000", // maroon
 ];
 
 const userColours = {};

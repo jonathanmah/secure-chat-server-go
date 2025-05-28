@@ -14,8 +14,11 @@ import (
 
 // HTTP handler called when a client first logs on, gets the id and username for an active peer
 func GetUserInfoHandler(w http.ResponseWriter, r *http.Request) {
-	claims, _ := auth.VerifySessionToken(r)
-	id := claims["id"].(string)
+	id, err := auth.GetClaimFromAccessCookie("id", r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	username, err := postgres.GetUsernameById(id)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -31,8 +34,11 @@ func GetUserInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 // HTTP handler, attempts to change usernames for a client
 func UpdateUsernameHandler(w http.ResponseWriter, r *http.Request) {
-	claims, _ := auth.VerifySessionToken(r)
-	id := claims["id"].(string)
+	id, err := auth.GetClaimFromAccessCookie("id", r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 	// checks if new username has valid syntax
 	username, err := parseAndValidateUsername(r)
 	if err != nil {

@@ -48,12 +48,11 @@ func ServeWsConn(hub *chat.Hub, w http.ResponseWriter, r *http.Request) {
 // retrieve the users id and username from the first HTTP1.1 req that
 // is starting the websocket handshake
 func getClientInfo(w http.ResponseWriter, r *http.Request) (string, string, error) {
-	claims, err := auth.VerifySessionToken(r)
+	id, err := auth.GetClaimFromAccessCookie("id", r)
 	if err != nil {
-		http.Error(w, "Failed to verify user", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return "", "", err
 	}
-	id := claims["id"].(string)
 	username, err := postgres.GetUsernameById(id)
 	if err != nil {
 		http.Error(w, "Failed to fetch username from postgres", http.StatusBadRequest)
