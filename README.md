@@ -1,3 +1,5 @@
+<!-- Multithreaded Pub/Sub Chat Server with Go and Postgres -->
+
 # Real-Time Go WebSocket Chat App
 
 **Real-time chat server with secure authentication and WebSocket support**  
