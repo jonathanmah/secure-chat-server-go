@@ -28,8 +28,8 @@ Built with Go, PostgreSQL, JavaScript, and Google OAuth 2.0.
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/your-username/realtime-chat-go.git
-cd realtime-chat-go
+git clone https://github.com/jonathanmah/secure-chat-server-go.git
+cd secure-chat-server-go
 ```
 ### 2. Set up an OAuth 2.0 client
 Details on how to create an OAuth 2.0 client and access client id and secret can be found [here](https://support.google.com/googleapi/answer/6158849?hl=en)
