@@ -52,14 +52,14 @@ func registerWsRoutes(r chi.Router) {
 
 // register routes for serving static frontend content
 func registerStaticRoutes(r chi.Router) {
-	publicDir := filepath.Join("..", "..", "frontend", "public") // relative to current directory
+	publicDir := filepath.Join("frontend", "public") // relative to current directory
 	fs := http.FileServer(http.Dir(publicDir))
 	r.Handle("/static/*", http.StripPrefix("/", fs)) // relative to address the router is listening
 }
 
 // register routes to serve html
 func registerHTMLRoutes(r chi.Router) {
-	publicDir := filepath.Join("..", "..", "frontend", "public", "html")
+	publicDir := filepath.Join("frontend", "public", "html")
 
 	r.Group(func(sub chi.Router) {
 		sub.Use(middleware.NoCache)

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -50,10 +49,11 @@ type AuthConfig struct {
 var App *Config
 
 func Load() {
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// remove for now, env vars are injected by docker compose
+	// err := godotenv.Load("../../.env")
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
 	baseURL := getEnv("BASE_URL")
 
 	App = &Config{
