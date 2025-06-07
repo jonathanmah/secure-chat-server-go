@@ -95,12 +95,6 @@ func (c *Client) SendWsMessage() {
 				return
 			}
 			w.Write(message)
-			// get current send buffer size and combine all messages into one
-			n := len(c.Send)
-			for i := 0; i < n; i++ {
-				w.Write([]byte{'\n'})
-				w.Write(<-c.Send)
-			}
 			if err := w.Close(); err != nil {
 				return
 			}
