@@ -1,7 +1,7 @@
 # Real-Time Go WebSocket Chat App
 
 **Real-time chat server with secure authentication and WebSocket support**  
-Built with Go, PostgreSQL, and Google OAuth.
+Built with Go, PostgreSQL, Docker Compose, and Google OAuth.
  
 <img width="1499" alt="Image" src="https://github.com/user-attachments/assets/9f555e89-ae17-401e-8ad8-4009700069da" />
 
