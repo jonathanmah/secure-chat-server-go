@@ -70,7 +70,7 @@ func NewOAuthStateCookie(state string) *http.Cookie {
 		Value:    state,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	}
 }

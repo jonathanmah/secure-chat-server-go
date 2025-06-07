@@ -20,6 +20,7 @@ services:
     build: .
     depends_on:
       - db
+    entrypoint: ["./wait-for-it.sh", "db:5432", "--", "./server"]
     env_file: .env
     ports:
       - "8080:8080"

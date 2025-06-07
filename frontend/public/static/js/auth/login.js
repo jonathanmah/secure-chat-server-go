@@ -1,6 +1,5 @@
 import { emailElement, passwordElement, error } from "./dom.js";
 import { login } from "../api.js";
-import { SERVER_BASE_URL } from "../config.js";
 
 document
   .getElementById("login-form")
@@ -19,12 +18,12 @@ document
       error.textContent = err.message;
       return;
     }
-    window.location.href = "/lobby";
+    window.location.href = '/lobby';
   });
 
 document.getElementById("googleLogin").addEventListener("click", function () {
   // Redirect the user to go server OAuth handler
-  window.location.href = `${SERVER_BASE_URL}/login/google`;
+  window.location.href = '/login/google';
 });
 
 // shows success status and cleans up URL
