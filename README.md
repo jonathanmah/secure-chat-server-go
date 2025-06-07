@@ -29,7 +29,7 @@ Built with Go, PostgreSQL, and Google OAuth.
 git clone https://github.com/your-username/realtime-chat-go.git
 cd realtime-chat-go
 ```
-### 2. Set up an OAuth 2.0 client
+### 2. Setup an OAuth 2.0 client
 Details on how to create an OAuth 2.0 client and access client id and secret can be found [here](https://support.google.com/googleapi/answer/6158849?hl=en)
 
 ### 3. Create a new email for automation
@@ -65,4 +65,10 @@ PG_PORT = 5432
 PG_DBNAME = <your-db-name>
 PG_SSL_MODE = disable # SSL mode for PostgreSQL connection
 PG_DRIVER_NAME = postgres # The SQL driver name to use to open a connection
+```
+
+### 5. Setup Docker and run Docker Compose
+
+```bash
+docker-compose up --build
 ```
