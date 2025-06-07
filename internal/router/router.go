@@ -63,7 +63,10 @@ func registerHTMLRoutes(r chi.Router) {
 
 	r.Group(func(sub chi.Router) {
 		sub.Use(middleware.NoCache)
-		sub.Get("/", serveFile(publicDir, "login.html"))
+		sub.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+		})
+		sub.Get("/login", serveFile(publicDir, "login.html"))
 		sub.Get("/sign-up", serveFile(publicDir, "sign-up.html"))
 		sub.Get("/forgot-password", serveFile(publicDir, "forgot-password.html"))
 	})
