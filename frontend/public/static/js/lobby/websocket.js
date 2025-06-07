@@ -23,7 +23,7 @@ export function initWebSocketConn(roomID) {
     socket.close(1000); // 1000 for normal close
   }
 
-  socket = new WebSocket(`${HUB_BASE_URL}/ws?room_id=${roomID}`);
+  socket = new WebSocket(`/ws?room_id=${roomID}`);
   renderRoomHeader(roomID);
   // upgrader.Upgrade() in Go server will trigger this, once updating protocol from HTTP1.1 to WebSocket
   socket.addEventListener("open", () => {

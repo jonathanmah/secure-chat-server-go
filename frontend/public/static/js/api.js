@@ -1,3 +1,5 @@
+import { SERVER_BASE_URL } from "./config.js";
+
 export async function fetchWithAuth(endpoint, init) {
   const res = await fetch(endpoint, init);
   if (res.status !== 401) {
@@ -17,14 +19,14 @@ export async function fetchWithAuth(endpoint, init) {
     // try the original request again after refreshing access token
     return fetch(endpoint, init);
   } else {
-    window.location.href = '/login'; // if failed to make request to refresh access token, then redirect to login
+    window.location.href = "/login"; // if failed to make request to refresh access token, then redirect to login
     throw new Error("Session expired. Redirecting to login.");
   }
 }
 
 // GET JSON - the current authenticated users id and username
 export async function getUserInfo() {
-  const res = await fetchWithAuth('/auth/user-info', {
+  const res = await fetchWithAuth(`${SERVER_BASE_URL}/auth/user-info`, {
     credentials: "include",
   });
   if (!res.ok) {
@@ -39,7 +41,7 @@ export async function getUserInfo() {
 
 // POST username - update the current users username in db
 export async function updateUsername(newUsername) {
-  const res = await fetchWithAuth('/auth/update-username', {
+  const res = await fetchWithAuth(`${SERVER_BASE_URL}/auth/update-username`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
@@ -55,7 +57,7 @@ export async function updateUsername(newUsername) {
 
 // POST empty - invalidate session cookie and redirects to login
 export async function logout() {
-  const res = await fetch('/auth/logout', {
+  const res = await fetch(`${SERVER_BASE_URL}/auth/logout`, {
     method: "POST",
     credentials: "include",
   });
@@ -69,7 +71,7 @@ export async function logout() {
 
 // POST email - send link with token for password reset
 export async function sendPasswordResetEmail(email) {
-  const res = await fetch('/auth/forgot-password', {
+  const res = await fetch(`${SERVER_BASE_URL}/auth/forgot-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -88,7 +90,7 @@ export async function sendPasswordResetEmail(email) {
 
 // POST email, password to login
 export async function login(email, password) {
-  const res = await fetch('/auth/login', {
+  const res = await fetch(`${SERVER_BASE_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -109,7 +111,7 @@ export async function login(email, password) {
 
 // POST token, password to reset
 export async function resetPassword(token, password) {
-  const res = await fetch('/auth/reset-password', {
+  const res = await fetch(`${SERVER_BASE_URL}/auth/reset-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -129,7 +131,7 @@ export async function resetPassword(token, password) {
 
 // POST email, password, register a new account
 export async function createNewAccount(email, password) {
-  const res = await fetch('/auth/sign-up', {
+  const res = await fetch(`${SERVER_BASE_URL}/auth/sign-up`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",

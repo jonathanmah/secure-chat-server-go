@@ -49,11 +49,7 @@ type AuthConfig struct {
 var App *Config
 
 func Load() {
-	// remove for now, env vars are injected by docker compose
-	// err := godotenv.Load("../../.env")
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+
 	baseURL := getEnv("BASE_URL")
 
 	App = &Config{
